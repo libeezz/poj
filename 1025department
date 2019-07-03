@@ -1,0 +1,86 @@
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<vector>
+
+struct Room
+{
+    bool busy,waitQueue[26];
+    int queueLength;
+}room[11][11];
+
+struct Visit
+{
+    int roomNumber,duration;
+};
+
+struct ListOfAllAgents
+{
+    int startTime,listAmount,listCounter;
+    vector<Visit> visitList;
+}list[26];
+
+struct ActionLog
+{
+    int actionType,startTime,endTime,startRoomNumber,endRoomNumber;
+};
+
+
+struct Record
+{
+    vector<ActionLog> actionLog;
+    int logCounter;
+}record[26];
+
+int init(){
+    for(int i=0;i<26;i++){
+        if(list[i].listAmount==0)continue;
+        ActionLog temp=0;
+        temp.actionType=1;
+        temp.startTime=list[i].startTime;
+        temp.endTime=temp.startTime+30;
+        temp.startRoomNumber=0;
+        if(list[i].visitList[0].roomNumber/100>1)temp.endRoomNumber=100;
+        else temp.endRoomNumber=list[i].visitList[0].roomNumber;
+        room[temp.endRoomNumber/100][temp.endRoomNumber%100].waitQueue[i]=true;
+        room[temp.endRoomNumber/100][temp.endRoomNumber%100].queueLength++;
+    }
+    return 0;
+}
+
+int cacul(){
+    return 0;
+}
+
+int main(){
+    char agent;
+    memset(list,0,sizeof(list));
+    memset(record,0,sizeof(record));
+    memset(room,0,sizeof(room));
+    //输入部分
+    while (scanf("%c",&agent)!=EOF) 
+    {
+        if (agent=='.')break;
+        scanf("%d",&list[agent-'A'].startTime);
+        int r,d;
+        while(scanf("%d",&r)!=EOF){
+            if(r==0)break;
+            Visit temp;
+            scanf("%d",&d);
+            temp.roomNumber=r;
+            temp.duration=d;
+            list[agent-'A'].visitList.push_back(temp);
+            list[agent-'A'].listAmount++; 
+        }
+        
+    }
+    //初始化
+    init();
+
+    //计算部分
+    
+    //输出部分
+
+
+    return 0;
+}
