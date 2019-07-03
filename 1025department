@@ -38,17 +38,81 @@ int init(){
         ActionLog temp=0;
         temp.actionType=1;
         temp.startTime=list[i].startTime;
-        temp.endTime=temp.startTime+30;
+        temp.endTime=temp.endTime;
         temp.startRoomNumber=0;
         if(list[i].visitList[0].roomNumber/100>1)temp.endRoomNumber=100;
         else temp.endRoomNumber=list[i].visitList[0].roomNumber;
-        room[temp.endRoomNumber/100][temp.endRoomNumber%100].waitQueue[i]=true;
-        room[temp.endRoomNumber/100][temp.endRoomNumber%100].queueLength++;
+        record[i].visitLog.push_back(temp);
     }
     return 0;
 }
-
+int entry(int id){
+    room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].waitQueue[id]=true;
+    room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].queueLength++;
+    record[id].actionLog[record[id].logCounter].endtime+=30;
+    
+    ActionLog temp;
+    if(list[id].visitList[0].roomNumber/100>1){
+        temp.actionType=2;
+        temp.startRoomNumber=100;
+        temp.endRoomNumber=100;
+    }
+    else{
+        temp.actionType=3;
+        temp.startRoomNumber=list[id].visitList[0].roomNumber;
+        temp.endRoomNumber=list[id].visitList[0].roomNumber;
+    }
+    temp.startTime=record[id].actionLog[record[id].logCounter].endtime;
+    temp.endTime=temp.startTime;
+    record[id].actionLog.push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
 int cacul(){
+    while(1){
+        int earliestTime=24*3600,id=26;
+        for(int i=0;i<26;i++){
+            if(list[i].listAmount=0)continue;
+            if(record[i].actionLog[record[i].logCounter].actionType=9)continue;
+            if(record[i].actionLog[record[i].logCounter].endTime<earliestTime){
+                earliestTime=record[i].actionLog[record[i].logCounter].endTime;
+                id=i;
+            }   
+        }
+        if(id==26)return 0;
+        switch (record[id].actionLog[record[id].logCounter].actionType)
+        {
+        case 1:
+            entry(id);
+            break;
+        case 2:
+            waitElevator(id);
+            break;
+        case 3:
+            waitRoom(id);
+            break;
+        case 4:
+            roomToRoom(id);
+            break;
+        case 5:
+            elevatorToRoom(id);
+            break;
+        case 6:
+            roomToElevator(id);
+            break;
+        case 7:
+            inRoom(id);
+            break;
+        case 8:
+            inElevator(id);
+            break;
+        case 9:
+            exit(id);
+            break;
+        default:
+            break;
+        }
+    }
     return 0;
 }
 
