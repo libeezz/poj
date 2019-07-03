@@ -5,7 +5,7 @@
 
 struct Room
 {
-    bool busy,waitQueue[26];
+    bool waitQueue[26];
     int queueLength;
 }room[11][11];
 
@@ -42,14 +42,15 @@ int init(){
         temp.startRoomNumber=0;
         if(list[i].visitList[0].roomNumber/100>1)temp.endRoomNumber=100;
         else temp.endRoomNumber=list[i].visitList[0].roomNumber;
-        record[i].visitLog.push_back(temp);
+        record[i].actionLog.push_back(temp);
     }
     return 0;
 }
 int entry(int id){
+    record[id].actionLog[record[id].logCounter].endtime+=30;
+
     room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].waitQueue[id]=true;
     room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].queueLength++;
-    record[id].actionLog[record[id].logCounter].endtime+=30;
     
     ActionLog temp;
     if(list[id].visitList[0].roomNumber/100>1){
@@ -66,6 +67,165 @@ int entry(int id){
     temp.endTime=temp.startTime;
     record[id].actionLog.push_back(temp);
     record[id].logCounter++;
+    return 0;
+}
+int waitElevator(int id){
+    if(record[id].actionLog[record[id].logCounter].endTime%5){
+        record[id].actionLog[record[id].logCounter].endTime=record[id].actionLog[record[id].logCounter].endTime/5*5+5;
+        return 0;
+    }
+
+    
+    ActionLog temp;
+    temp.actionType=8;
+    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+    if(list[id].listCounter>list[id].listAmount)temp.endRoomNumber=100;//exit
+    else temp.endRoomNumber=list[id].visitList[list[id].listCounter].roomNumber/100*100;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength--;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=false;
+
+    if(room[temp.startRoomNumber/100][temp.endRoomNumber].queueLength>0){
+        for(int i=0;i<26;i++){
+        if(!room[temp.startRoomNumber/100][temp.endRoomNumber%100].waitQueue[i])continue;
+        record[i].actionLog[record[i].logCounter].endTime+=5;
+        }
+    }
+
+    if(record[id].actionLog[record[id].logCounter].endTime==record[id].actionLog[record[id].logCounter].startTime){
+        
+        record[id].actionLog[record[id].logCounter]=temp;
+    }
+    else
+    {
+        record[id].actionLog[record[id].logCounter].push_back(temp);
+        record[id].logCounter++;
+    }
+    
+    return 0;
+}
+int waitRoom(int id){
+    ActionLog temp;
+    temp.actionType=7;
+    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+    temp.endRoomNumber=temp.startRoomNumber;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength--;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=false;
+    if(record[id].actionLog[record[id].logCounter].endTime==record[id].actionLog[record[id].logCounter].startTime){
+        
+        record[id].actionLog[record[id].logCounter]=temp;
+    }
+    else
+    {
+        record[id].actionLog[record[id].logCounter].push_back(temp);
+        record[id].logCounter++;
+    }
+    return 0;
+}
+
+int roomToRoom(int id){
+    record[id].actionLog[record[id].logCounter].endTime+=10;
+
+    ActionLog temp;
+    temp.actionType=3;
+    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+    temp.endRoomNumber=temp.startRoomNumber;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
+
+    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
+
+int elevatorToRoom(int id){
+    record[id].actionLog[record[id].logCounter].endTime+=10;
+
+    ActionLog temp;
+    temp.actionType=3;
+    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+    temp.endRoomNumber=temp.startRoomNumber;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
+
+    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
+
+int roomToElevator(int id){
+    record[id].actionLog[record[id].logCounter].endTime+=10;
+
+    ActionLog temp;
+    temp.actionType=2;
+    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+    temp.endRoomNumber=temp.startRoomNumber;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
+    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
+
+    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
+
+int inRoom(int id){
+    record[id].actionLog[record[id].logCounter].endTime+=list[id].visitList[list[id].listCounter].duration;
+
+    ActionLog temp;
+    if(list[id].listCounter==list[id].listAmount||list[id].visitList[list[id].listCounter].roomNumber/100!=list[id].visitList[list[id].listCounter+1].roomNumber/100){
+        temp.actionType=6;
+        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+        temp.endRoomNumber=temp.startRoomNumber/100*100; 
+    }else{
+        temp.actionType=4;
+        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+        temp.endRoomNumber=list[id].visitList[list[id].listCounter+1].roomNumber;
+    }
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+    list[id].listCounter++;
+
+    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
+int inElevator(int id){
+    int time=(record[id].actionLog[record[id].logCounter].startRoomNumber/100-record[id].actionLog[record[id].logCounter].endRoomNumber/100)*30;
+    if(time<0)time=-time;
+    record[id].actionLog[record[id].logCounter].endTime+=time;
+
+    ActionLog temp;
+    if(list[id].listCounter>list[id].listAmount){
+        temp.actionType=9;
+        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+        temp.endRoomNumber=100;
+    }else{
+        temp.actionType=5;
+        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
+        temp.endRoomNumber=list[id].visitList[list[id].listCounter].roomNumber;
+    }
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
+    temp.endTime=temp.startTime;
+
+    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].logCounter++;
+    return 0;
+}
+int exit(int id){
+    record[id].actionLog[record[id].logCounter].endTime+=30;
+
     return 0;
 }
 int cacul(){
