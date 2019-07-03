@@ -275,6 +275,51 @@ int cacul(){
     }
     return 0;
 }
+int output(){
+    for(int i=0;i<26;i++){
+        if(record[i].logCounter==0)continue;
+        for(int j=0;j<record[i].logCounter;j++){
+            int s=record[i].actionLog[j].startTime,e=record[i].actionLog[j].endTime;
+            printf("%d:%d:%d %d:%d:%d ",s/3600,s/60%60,s%60,e/3600,e/60%60,e%60);
+            s=record[i].actionLog[j].startRoomNumber;
+            e=record[i].actionLog[j].endRoomNumber;
+            switch (record[i].actionLog[j].actionType)
+            {
+            case 1:
+                break;
+                printf("Entry");
+            case 2:
+                printf("Waiting in elevator queue");
+                break;
+            case 3:
+                printf("Waiting in front of room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10);
+                break;
+            case 4:
+                printf("Transfer from room %d%d%d%d to room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10,e/1000,e/100%10,e/10%10,e%10);
+                break;
+            case 5:
+                printf("Transfer from elevator to room %d%d%d%d",e/1000,e/100%10,e/10%10,e%10);
+                break;
+            case 6:
+                printf("Transfer from room %d%d%d%d to elevator",s/1000,s/100%10,s/10%10,s%10);
+                break;
+            case 7:
+                printf("Stay in room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10);
+                break;
+            case 8:
+                printf("Stay in elevator");
+                break;
+            case 9:
+                printf("Exit");
+                break;
+            default:
+                break;
+            }
+            printf("\n");
+        }
+    }
+    return 0;
+}
 
 int main(){
     char agent;
@@ -302,9 +347,9 @@ int main(){
     init();
 
     //计算部分
-    
+    cacul();
     //输出部分
-
+    output();
 
     return 0;
 }
