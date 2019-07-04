@@ -2,7 +2,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<vector>
-
+using namespace std;
 struct Room
 {
     bool waitQueue[26];
@@ -35,7 +35,7 @@ struct Record
 int init(){
     for(int i=0;i<26;i++){
         if(list[i].listAmount==0)continue;
-        ActionLog temp=0;
+        ActionLog temp;
         temp.actionType=1;
         temp.startTime=list[i].startTime;
         temp.endTime=temp.endTime;
@@ -47,7 +47,7 @@ int init(){
     return 0;
 }
 int entry(int id){
-    record[id].actionLog[record[id].logCounter].endtime+=30;
+    record[id].actionLog[record[id].logCounter].endTime+=30;
 
     room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].waitQueue[id]=true;
     room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].queueLength++;
@@ -63,7 +63,7 @@ int entry(int id){
         temp.startRoomNumber=list[id].visitList[0].roomNumber;
         temp.endRoomNumber=list[id].visitList[0].roomNumber;
     }
-    temp.startTime=record[id].actionLog[record[id].logCounter].endtime;
+    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
     temp.endTime=temp.startTime;
     record[id].actionLog.push_back(temp);
     record[id].logCounter++;
@@ -99,7 +99,7 @@ int waitElevator(int id){
     }
     else
     {
-        record[id].actionLog[record[id].logCounter].push_back(temp);
+        record[id].actionLog.push_back(temp);
         record[id].logCounter++;
     }
     
@@ -120,7 +120,7 @@ int waitRoom(int id){
     }
     else
     {
-        record[id].actionLog[record[id].logCounter].push_back(temp);
+        record[id].actionLog.push_back(temp);
         record[id].logCounter++;
     }
     return 0;
@@ -139,7 +139,7 @@ int roomToRoom(int id){
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
 
-    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].actionLog.push_back(temp);
     record[id].logCounter++;
     return 0;
 }
@@ -157,7 +157,7 @@ int elevatorToRoom(int id){
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
 
-    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].actionLog.push_back(temp);
     record[id].logCounter++;
     return 0;
 }
@@ -175,7 +175,7 @@ int roomToElevator(int id){
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
     room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
 
-    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].actionLog.push_back(temp);
     record[id].logCounter++;
     return 0;
 }
@@ -197,7 +197,7 @@ int inRoom(int id){
     temp.endTime=temp.startTime;
     list[id].listCounter++;
 
-    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].actionLog.push_back(temp);
     record[id].logCounter++;
     return 0;
 }
@@ -219,11 +219,11 @@ int inElevator(int id){
     temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
     temp.endTime=temp.startTime;
 
-    record[id].actionLog[record[id].logCounter].push_back(temp);
+    record[id].actionLog.push_back(temp);
     record[id].logCounter++;
     return 0;
 }
-int exit(int id){
+int exitBuilding(int id){
     record[id].actionLog[record[id].logCounter].endTime+=30;
 
     return 0;
@@ -233,7 +233,7 @@ int cacul(){
         int earliestTime=24*3600,id=26;
         for(int i=0;i<26;i++){
             if(list[i].listAmount=0)continue;
-            if(record[i].actionLog[record[i].logCounter].actionType=9)continue;
+            if(record[i].actionLog[record[i].logCounter].actionType==9)continue;
             if(record[i].actionLog[record[i].logCounter].endTime<earliestTime){
                 earliestTime=record[i].actionLog[record[i].logCounter].endTime;
                 id=i;
@@ -267,7 +267,7 @@ int cacul(){
             inElevator(id);
             break;
         case 9:
-            exit(id);
+            exitBuilding(id);
             break;
         default:
             break;
@@ -330,10 +330,15 @@ int main(){
     while (scanf("%c",&agent)!=EOF) 
     {
         if (agent=='.')break;
-        scanf("%d",&list[agent-'A'].startTime);
+        int h,m,s;
+        scanf("%d:%d:%d",&h,&m,&s);
+        list[agent-'A'].startTime=h*3600+m*60+s;
         int r,d;
         while(scanf("%d",&r)!=EOF){
-            if(r==0)break;
+            if(r==0){
+                getchar();
+                break;
+                }
             Visit temp;
             scanf("%d",&d);
             temp.roomNumber=r;
