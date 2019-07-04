@@ -1,360 +1,406 @@
-#include<stdio.h>
+#include "stdio.h"
 #include<string.h>
 #include<stdlib.h>
 #include<vector>
 using namespace std;
 struct Room
 {
-    bool waitQueue[26];
-    int queueLength;
+	bool busy,waitQueue[26];
+	int queueLength;
 }room[11][11];
 
 struct Visit
 {
-    int roomNumber,duration;
+	int roomNumber, duration;
 };
 
 struct ListOfAllAgents
 {
-    int startTime,listAmount,listCounter;
-    vector<Visit> visitList;
+	int startTime, listAmount, listCounter;
+	vector<Visit> visitList;
 }list[26];
 
 struct ActionLog
 {
-    int actionType,startTime,endTime,startRoomNumber,endRoomNumber;
+	int actionType, startTime, endTime, startRoomNumber, endRoomNumber;
 };
 
 
 struct Record
 {
-    vector<ActionLog> actionLog;
-    int logCounter;
+	vector<ActionLog> actionLog;
+	int logCounter;
 }record[26];
 
-int init(){
-    for(int i=0;i<26;i++){
-        if(list[i].listAmount==0)continue;
-        ActionLog temp;
-        temp.actionType=1;
-        temp.startTime=list[i].startTime;
-        temp.endTime=temp.endTime;
-        temp.startRoomNumber=0;
-        if(list[i].visitList[0].roomNumber/100>1)temp.endRoomNumber=100;
-        else temp.endRoomNumber=list[i].visitList[0].roomNumber;
-        record[i].actionLog.push_back(temp);
-    }
-    return 0;
+int init() {
+	for (int i = 0; i<26; i++) {
+		if (list[i].listAmount == 0)continue;
+		ActionLog temp;
+		temp.actionType = 1;
+		temp.startTime = list[i].startTime;
+		temp.endTime = temp.startTime;
+		temp.startRoomNumber = 0;
+		if (list[i].visitList[0].roomNumber / 100>1)temp.endRoomNumber = 100;
+		else temp.endRoomNumber = list[i].visitList[0].roomNumber;
+		record[i].actionLog.push_back(temp);
+	}
+	return 0;
 }
-int entry(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=30;
+int entry(int id) {
+	record[id].actionLog[record[id].logCounter].endTime += 30;
 
-    room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].waitQueue[id]=true;
-    room[list[id].visitList[0].roomNumber/100][list[id].visitList[0].roomNumber%100].queueLength++;
-    
-    ActionLog temp;
-    if(list[id].visitList[0].roomNumber/100>1){
-        temp.actionType=2;
-        temp.startRoomNumber=100;
-        temp.endRoomNumber=100;
-    }
-    else{
-        temp.actionType=3;
-        temp.startRoomNumber=list[id].visitList[0].roomNumber;
-        temp.endRoomNumber=list[id].visitList[0].roomNumber;
-    }
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
+	room[list[id].visitList[0].roomNumber / 100][list[id].visitList[0].roomNumber % 100].waitQueue[id] = true;
+	room[list[id].visitList[0].roomNumber / 100][list[id].visitList[0].roomNumber % 100].queueLength++;
+
+	ActionLog temp;
+	if (list[id].visitList[0].roomNumber / 100>1) {
+		temp.actionType = 2;
+		temp.startRoomNumber = 100;
+		temp.endRoomNumber = 100;
+	}
+	else {
+		temp.actionType = 3;
+		temp.startRoomNumber = list[id].visitList[0].roomNumber;
+		temp.endRoomNumber = list[id].visitList[0].roomNumber;
+	}
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
 }
-int waitElevator(int id){
-    if(record[id].actionLog[record[id].logCounter].endTime%5){
-        record[id].actionLog[record[id].logCounter].endTime=record[id].actionLog[record[id].logCounter].endTime/5*5+5;
-        return 0;
-    }
+int waitElevator(int id) {
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].queueLength++;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[id] = true;
+	if (record[id].actionLog[record[id].logCounter].endTime % 5) {
+		record[id].actionLog[record[id].logCounter].endTime = record[id].actionLog[record[id].logCounter].endTime / 5 * 5 + 5;
+	}
 
-    
-    ActionLog temp;
-    temp.actionType=8;
-    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-    if(list[id].listCounter>list[id].listAmount)temp.endRoomNumber=100;//exit
-    else temp.endRoomNumber=list[id].visitList[list[id].listCounter].roomNumber/100*100;
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength--;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=false;
 
-    if(room[temp.startRoomNumber/100][temp.endRoomNumber].queueLength>0){
-        for(int i=0;i<26;i++){
-        if(!room[temp.startRoomNumber/100][temp.endRoomNumber%100].waitQueue[i])continue;
-        record[i].actionLog[record[i].logCounter].endTime+=5;
-        }
-    }
+	ActionLog temp;
+	temp.actionType = 8;
+	temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+	if (list[id].listCounter >= list[id].listAmount)temp.endRoomNumber = 100;
+	else temp.endRoomNumber = list[id].visitList[list[id].listCounter].roomNumber/100*100;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
 
-    if(record[id].actionLog[record[id].logCounter].endTime==record[id].actionLog[record[id].logCounter].startTime){
-        
-        record[id].actionLog[record[id].logCounter]=temp;
-    }
-    else
-    {
-        record[id].actionLog.push_back(temp);
-        record[id].logCounter++;
-    }
-    
-    return 0;
+	if (record[id].actionLog[record[id].logCounter].endTime == record[id].actionLog[record[id].logCounter].startTime) {
+
+		record[id].actionLog[record[id].logCounter] = temp;
+	}
+	else
+	{
+		record[id].actionLog.push_back(temp);
+		record[id].logCounter++;
+	}
+
+	return 0;
 }
-int waitRoom(int id){
-    ActionLog temp;
-    temp.actionType=7;
-    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-    temp.endRoomNumber=temp.startRoomNumber;
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength--;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=false;
-    if(record[id].actionLog[record[id].logCounter].endTime==record[id].actionLog[record[id].logCounter].startTime){
-        
-        record[id].actionLog[record[id].logCounter]=temp;
-    }
-    else
-    {
-        record[id].actionLog.push_back(temp);
-        record[id].logCounter++;
-    }
-    return 0;
-}
+int waitRoom(int id) {
+	room[record[id].actionLog[record[id].logCounter].endRoomNumber / 100][record[id].actionLog[record[id].logCounter].endRoomNumber % 100].queueLength++;
+	room[record[id].actionLog[record[id].logCounter].endRoomNumber / 100][record[id].actionLog[record[id].logCounter].endRoomNumber % 100].waitQueue[id] = true;
+	if (room[record[id].actionLog[record[id].logCounter].endRoomNumber / 100][record[id].actionLog[record[id].logCounter].endRoomNumber % 100].busy) {
+		for (int i = 0; i < 26; i++) {
+			if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[i] == false)continue;
+			record[i].actionLog[record[i].logCounter].endTime = 24*3600;
+		}
+		return 0;
+	}
 
-int roomToRoom(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=10;
+	ActionLog temp;
+	temp.actionType = 7;
+	temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+	temp.endRoomNumber = temp.startRoomNumber;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
+	
+	if (record[id].actionLog[record[id].logCounter].endTime == record[id].actionLog[record[id].logCounter].startTime) {
 
-    ActionLog temp;
-    temp.actionType=3;
-    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-    temp.endRoomNumber=temp.startRoomNumber;
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
-
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
+		record[id].actionLog[record[id].logCounter] = temp;
+	}
+	else
+	{
+		record[id].actionLog.push_back(temp);
+		record[id].logCounter++;
+	}
+	return 0;
 }
 
-int elevatorToRoom(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=10;
+int roomToRoom(int id) {
+	record[id].actionLog[record[id].logCounter].endTime += 10;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].busy = false;
+	for (int i = 0; i < 26; i++) {
+		if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[i] == false)continue;
+		record[i].actionLog[record[i].logCounter].endTime = record[id].actionLog[record[id].logCounter].startTime;
+	}
 
-    ActionLog temp;
-    temp.actionType=3;
-    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-    temp.endRoomNumber=temp.startRoomNumber;
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
+	ActionLog temp;
+	temp.actionType = 3;
+	temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+	temp.endRoomNumber = temp.startRoomNumber;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
 
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
-
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
 }
 
-int roomToElevator(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=10;
+int elevatorToRoom(int id) {
+	record[id].actionLog[record[id].logCounter].endTime += 10;
 
-    ActionLog temp;
-    temp.actionType=2;
-    temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-    temp.endRoomNumber=temp.startRoomNumber;
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
+	ActionLog temp;
+	temp.actionType = 3;
+	temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+	temp.endRoomNumber = temp.startRoomNumber;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
 
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].queueLength++;
-    room[temp.startRoomNumber/100][temp.startRoomNumber%100].waitQueue[id]=true;
-
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
 }
 
-int inRoom(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=list[id].visitList[list[id].listCounter].duration;
+int roomToElevator(int id) {
+	record[id].actionLog[record[id].logCounter].endTime += 10;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].busy = false;
+	for (int i = 0; i < 26; i++) {
+		if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[i] == false)continue;
+		record[i].actionLog[record[i].logCounter].endTime = record[id].actionLog[record[id].logCounter].startTime;
+	}
 
-    ActionLog temp;
-    if(list[id].listCounter==list[id].listAmount||list[id].visitList[list[id].listCounter].roomNumber/100!=list[id].visitList[list[id].listCounter+1].roomNumber/100){
-        temp.actionType=6;
-        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-        temp.endRoomNumber=temp.startRoomNumber/100*100; 
-    }else{
-        temp.actionType=4;
-        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-        temp.endRoomNumber=list[id].visitList[list[id].listCounter+1].roomNumber;
-    }
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-    list[id].listCounter++;
+	ActionLog temp;
+	temp.actionType = 2;
+	temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+	temp.endRoomNumber = temp.startRoomNumber;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
 
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
-}
-int inElevator(int id){
-    int time=(record[id].actionLog[record[id].logCounter].startRoomNumber/100-record[id].actionLog[record[id].logCounter].endRoomNumber/100)*30;
-    if(time<0)time=-time;
-    record[id].actionLog[record[id].logCounter].endTime+=time;
+	room[temp.startRoomNumber / 100][temp.startRoomNumber % 100].queueLength++;
+	room[temp.startRoomNumber / 100][temp.startRoomNumber % 100].waitQueue[id] = true;
 
-    ActionLog temp;
-    if(list[id].listCounter>list[id].listAmount){
-        temp.actionType=9;
-        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-        temp.endRoomNumber=100;
-    }else{
-        temp.actionType=5;
-        temp.startRoomNumber=record[id].actionLog[record[id].logCounter].endRoomNumber;
-        temp.endRoomNumber=list[id].visitList[list[id].listCounter].roomNumber;
-    }
-    temp.startTime=record[id].actionLog[record[id].logCounter].endTime;
-    temp.endTime=temp.startTime;
-
-    record[id].actionLog.push_back(temp);
-    record[id].logCounter++;
-    return 0;
-}
-int exitBuilding(int id){
-    record[id].actionLog[record[id].logCounter].endTime+=30;
-
-    return 0;
-}
-int cacul(){
-    while(1){
-        int earliestTime=24*3600,id=26;
-        for(int i=0;i<26;i++){
-            if(list[i].listAmount=0)continue;
-            if(record[i].actionLog[record[i].logCounter].actionType==9)continue;
-            if(record[i].actionLog[record[i].logCounter].endTime<earliestTime){
-                earliestTime=record[i].actionLog[record[i].logCounter].endTime;
-                id=i;
-            }   
-        }
-        if(id==26)return 0;
-        switch (record[id].actionLog[record[id].logCounter].actionType)
-        {
-        case 1:
-            entry(id);
-            break;
-        case 2:
-            waitElevator(id);
-            break;
-        case 3:
-            waitRoom(id);
-            break;
-        case 4:
-            roomToRoom(id);
-            break;
-        case 5:
-            elevatorToRoom(id);
-            break;
-        case 6:
-            roomToElevator(id);
-            break;
-        case 7:
-            inRoom(id);
-            break;
-        case 8:
-            inElevator(id);
-            break;
-        case 9:
-            exitBuilding(id);
-            break;
-        default:
-            break;
-        }
-    }
-    return 0;
-}
-int output(){
-    for(int i=0;i<26;i++){
-        if(record[i].logCounter==0)continue;
-        for(int j=0;j<record[i].logCounter;j++){
-            int s=record[i].actionLog[j].startTime,e=record[i].actionLog[j].endTime;
-            printf("%d:%d:%d %d:%d:%d ",s/3600,s/60%60,s%60,e/3600,e/60%60,e%60);
-            s=record[i].actionLog[j].startRoomNumber;
-            e=record[i].actionLog[j].endRoomNumber;
-            switch (record[i].actionLog[j].actionType)
-            {
-            case 1:
-                break;
-                printf("Entry");
-            case 2:
-                printf("Waiting in elevator queue");
-                break;
-            case 3:
-                printf("Waiting in front of room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10);
-                break;
-            case 4:
-                printf("Transfer from room %d%d%d%d to room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10,e/1000,e/100%10,e/10%10,e%10);
-                break;
-            case 5:
-                printf("Transfer from elevator to room %d%d%d%d",e/1000,e/100%10,e/10%10,e%10);
-                break;
-            case 6:
-                printf("Transfer from room %d%d%d%d to elevator",s/1000,s/100%10,s/10%10,s%10);
-                break;
-            case 7:
-                printf("Stay in room %d%d%d%d",s/1000,s/100%10,s/10%10,s%10);
-                break;
-            case 8:
-                printf("Stay in elevator");
-                break;
-            case 9:
-                printf("Exit");
-                break;
-            default:
-                break;
-            }
-            printf("\n");
-        }
-    }
-    return 0;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
 }
 
-int main(){
-    char agent;
-    memset(list,0,sizeof(list));
-    memset(record,0,sizeof(record));
-    memset(room,0,sizeof(room));
-    //输入部分
-    while (scanf("%c",&agent)!=EOF) 
-    {
-        if (agent=='.')break;
-        int h,m,s;
-        scanf("%d:%d:%d",&h,&m,&s);
-        list[agent-'A'].startTime=h*3600+m*60+s;
-        int r,d;
-        while(scanf("%d",&r)!=EOF){
-            if(r==0){
-                getchar();
-                break;
-                }
-            Visit temp;
-            scanf("%d",&d);
-            temp.roomNumber=r;
-            temp.duration=d;
-            list[agent-'A'].visitList.push_back(temp);
-            list[agent-'A'].listAmount++; 
-        }
-        
-    }
-    //初始化
-    init();
+int inRoom(int id) {
+	record[id].actionLog[record[id].logCounter].endTime += list[id].visitList[list[id].listCounter].duration;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].queueLength--;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].busy = true;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[id] = false;
 
-    //计算部分
-    cacul();
-    //输出部分
-    output();
+	ActionLog temp;
+	if (list[id].listCounter + 1 >= list[id].listAmount) {
+		if (list[id].visitList[list[id].listCounter].roomNumber / 100 == 1) {
+			temp.actionType = 9;
+			temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+			temp.endRoomNumber = 0;
+		}
+		else {
+			temp.actionType = 6;
+			temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+			temp.endRoomNumber = temp.startRoomNumber / 100 * 100;
+		}
+	}
+	else if (list[id].visitList[list[id].listCounter].roomNumber / 100 != list[id].visitList[list[id].listCounter + 1].roomNumber / 100) {
+		temp.actionType = 6;
+		temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+		temp.endRoomNumber = temp.startRoomNumber / 100 * 100;
+	}
+	else {
+		temp.actionType = 4;
+		temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+		temp.endRoomNumber = list[id].visitList[list[id].listCounter + 1].roomNumber;
+	}
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
+	if (temp.actionType == 9)temp.endTime += 30;
 
-    return 0;
+	list[id].listCounter++;
+
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
+}
+int inElevator(int id) {
+	int time = (record[id].actionLog[record[id].logCounter].startRoomNumber / 100 - record[id].actionLog[record[id].logCounter].endRoomNumber / 100) * 30;
+	if (time<0)time = -time;
+	record[id].actionLog[record[id].logCounter].endTime += time;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].queueLength--;
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[id] = false;
+	if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].queueLength > 0) {
+		for (int i = 0; i < 26; i++) {
+			if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[i] == false)continue;
+			record[i].actionLog[record[i].logCounter].endTime = record[id].actionLog[record[id].logCounter].startTime + 5;
+		}
+	}
+	ActionLog temp;
+	if (list[id].listCounter>=list[id].listAmount) {
+		temp.actionType = 9;
+		temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+		temp.endRoomNumber = 100;
+	}
+	else {
+		temp.actionType = 5;
+		temp.startRoomNumber = record[id].actionLog[record[id].logCounter].endRoomNumber;
+		temp.endRoomNumber = list[id].visitList[list[id].listCounter].roomNumber;
+	}
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
+	if (temp.actionType == 9)temp.endTime += 30;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	
+	return 0;
+}
+int exitBuilding(int id) {
+	room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].busy = false;
+	for (int i = 0; i < 26; i++) {
+		if (room[record[id].actionLog[record[id].logCounter].startRoomNumber / 100][record[id].actionLog[record[id].logCounter].startRoomNumber % 100].waitQueue[i] == false)continue;
+		record[i].actionLog[record[i].logCounter].endTime = record[id].actionLog[record[id].logCounter].startTime;
+	}
+
+	ActionLog temp;
+	temp.actionType = 10;
+	temp.startTime = record[id].actionLog[record[id].logCounter].endTime;
+	temp.endTime = temp.startTime;
+	temp.startRoomNumber = 0;
+	temp.endRoomNumber = 0;
+	record[id].actionLog.push_back(temp);
+	record[id].logCounter++;
+	return 0;
+}
+int cacul() {
+	while (1) {
+		int earliestTime = 24 * 3600, id = 26;
+		for (int i = 0; i<26; i++) {
+			if (list[i].listAmount == 0)continue;
+			if (record[i].actionLog[record[i].logCounter].actionType == 10)continue;
+			if (record[i].actionLog[record[i].logCounter].endTime<earliestTime) {
+				earliestTime = record[i].actionLog[record[i].logCounter].endTime;
+				id = i;
+			}
+		}
+		if (id == 26)return 0;
+		switch (record[id].actionLog[record[id].logCounter].actionType)
+		{
+		case 1:
+			entry(id);
+			break;
+		case 2:
+			waitElevator(id);
+			break;
+		case 3:
+			waitRoom(id);
+			break;
+		case 4:
+			roomToRoom(id);
+			break;
+		case 5:
+			elevatorToRoom(id);
+			break;
+		case 6:
+			roomToElevator(id);
+			break;
+		case 7:
+			inRoom(id);
+			break;
+		case 8:
+			inElevator(id);
+			break;
+		case 9:
+			exitBuilding(id);
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+int output() {
+	for (int i = 0; i<26; i++) {
+		if (record[i].logCounter == 0)continue;
+		printf("%c\n", i + 'A');
+		for (int j = 0; j<record[i].logCounter; j++) {
+			int s = record[i].actionLog[j].startTime, e = record[i].actionLog[j].endTime;
+			printf("%d%d:%d%d:%d%d %d%d:%d%d:%d%d ", s/3600/10, s / 3600%10, s / 60 % 60/10, s / 60 % 60%10, s % 60/10, s % 60%10, e / 3600/10, e / 3600%10, e / 60 % 60/10, e / 60 % 60%10, e % 60/10, e % 60%10);
+			s = record[i].actionLog[j].startRoomNumber;
+			e = record[i].actionLog[j].endRoomNumber;
+			switch (record[i].actionLog[j].actionType)
+			{
+			case 1:
+				printf("Entry");
+				break;
+			case 2:
+				printf("Waiting in elevator queue");
+				break;
+			case 3:
+				printf("Waiting in front of room %d%d%d%d", s / 1000, s / 100 % 10, s / 10 % 10, s % 10);
+				break;
+			case 4:
+				printf("Transfer from room %d%d%d%d to room %d%d%d%d", s / 1000, s / 100 % 10, s / 10 % 10, s % 10, e / 1000, e / 100 % 10, e / 10 % 10, e % 10);
+				break;
+			case 5:
+				printf("Transfer from elevator to room %d%d%d%d", e / 1000, e / 100 % 10, e / 10 % 10, e % 10);
+				break;
+			case 6:
+				printf("Transfer from room %d%d%d%d to elevator", s / 1000, s / 100 % 10, s / 10 % 10, s % 10);
+				break;
+			case 7:
+				printf("Stay in room %d%d%d%d", s / 1000, s / 100 % 10, s / 10 % 10, s % 10);
+				break;
+			case 8:
+				printf("Stay in elevator");
+				break;
+			case 9:
+				printf("Exit");
+				break;
+			default:
+				break;
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	return 0;
+}
+
+int main() {
+	char agent;
+	memset(list, 0, sizeof(list));
+	memset(record, 0, sizeof(record));
+	memset(room, 0, sizeof(room));
+	//输入部分
+	while (scanf_s("%c", &agent,1) != EOF)
+	{
+		if (agent == '.')break;
+		int h, m, s;
+		scanf_s("%d:%d:%d", &h, &m, &s);
+		list[agent - 'A'].startTime = h * 3600 + m * 60 + s;
+		int r, d;
+		while (scanf_s("%d", &r) != EOF) {
+			if (r == 0) {
+				getchar();
+				break;
+			}
+			Visit temp;
+			scanf_s("%d", &d);
+			temp.roomNumber = r;
+			temp.duration = d;
+			list[agent - 'A'].visitList.push_back(temp);
+			list[agent - 'A'].listAmount++;
+		}
+
+	}
+	//初始化
+	init();
+
+	//计算部分
+	cacul();
+	//输出部分
+	output();
+
+	return 0;
 }
